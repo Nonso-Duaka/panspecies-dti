@@ -95,7 +95,7 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
         commands = [
             f"mmseqs createdb {train_fasta_path} {unique_tmp_dir}/queryDB",
             f"mmseqs createdb {target_fasta_path} {unique_tmp_dir}/targetDB",
-            f"mmseqs search {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {unique_tmp_dir}/tmp -s 7.5 --min-seq-id {threshold} --threads {threads}",
+            f"mmseqs search {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {unique_tmp_dir}/tmp -s 7.5 --min-seq-id {threshold} --max-seqs 0 --threads {threads}",
             f"mmseqs convertalis {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {output_file}"
         ]
 
@@ -1290,11 +1290,11 @@ class MergedDataset(Dataset):
                 target_features = target_entry[aa_id]
             else:
                 target_features = np.zeros((1, self.tdim), dtype=np.float32)
-
+        # Fetch the drug and target feature for this idx from LMDB
         return (
-            torch.from_numpy(drug_features),
-            torch.from_numpy(target_features),
-            torch.tensor(label, dtype=torch.float32)
+            torch.from_numpy(drug_features), # drug
+            torch.from_numpy(target_features), # target
+            torch.tensor(label, dtype=torch.float32) # label
         )
 
     def on_epoch_end(self):
@@ -1420,7 +1420,7 @@ class MergedDataModule(pl.LightningDataModule):
             print(f"Found {len(similar_ids)} similar sequences to exclude (out of {len(self.id_to_target)} total training sequences)")
             print(f"Exclusion rate: {100.0 * len(similar_ids) / len(self.id_to_target):.2f}%")
 
-            # Pass exclusion_ids directly as a set (no temporary file needed)
+            # Pass exclusion_ids directly as a set 
             exclusion_ids: Set[str] = similar_ids
 
             self.data_all = MergedDataset('all', self.drug_db, self.target_db, self.id_to_smiles, self.id_to_target, tdim=tdim, exclusion_ids=exclusion_ids)
