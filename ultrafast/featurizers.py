@@ -68,7 +68,7 @@ class Featurizer:
             self._map_size = kwargs['map_size']
 
     def __call__(self, seq: str) -> torch.Tensor:
-        if self.ext == 'lmdb' and self.db is not None:
+        if self.ext == '.lmdb' and self.db is not None:
             assert self.id_to_idx is not None, "LMDB database must be preloaded to use this function"
             hashed_seq = hashlib.md5(seq.encode()).hexdigest()
             item = self.db[self.id_to_idx[hashed_seq]]
