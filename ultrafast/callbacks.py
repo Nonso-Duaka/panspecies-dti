@@ -56,6 +56,8 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
             model.args.drug_featurizer,
             save_dir=out_dir,
             batch_size=2048 * 8,
+            ext="lmdb",
+            map_size=100000,  # 100GB map size for large datasets like VSDS
         )
         drug_featurizer = drug_featurizer.to(device)
 
@@ -81,6 +83,8 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
             model.args.target_featurizer,
             save_dir=out_dir,
             batch_size=16,
+            ext="lmdb",
+            map_size=100000,  # 100GB map size for large datasets like VSDS
         )
         target_featurizer = target_featurizer.to(device)
 
@@ -115,7 +119,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
         bedroc = CalcBEDROC(scores, 1, 85.0)
         auroc = CalcAUC(scores, 1)
         efs = CalcEnrichment(scores, 1, [0.005, 0.01, 0.05])
-        
+
         all_targets.append(target)
         for i, ef in enumerate(efs):
             all_efs[list(all_efs.keys())[i]].append(ef)
@@ -152,4 +156,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
     print(f"Average BEDROC_85: {avg_bedroc:.3f}")
     print(f"Average AUROC: {avg_auroc:.3f}")
 
+
+def eval_vsds(trainer, model, vsds_dir):
+    return eval_pcba(trainer, model, pcba_dir=vsds_dir)
 

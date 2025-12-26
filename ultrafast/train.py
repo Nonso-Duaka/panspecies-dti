@@ -14,7 +14,7 @@ from pathlib import Path
 
 import argparse
 
-from ultrafast.callbacks import eval_pcba
+from ultrafast.callbacks import eval_pcba, eval_vsds
 from ultrafast.datamodules import (
     get_task_dir,
     DTIDataModule,
@@ -31,6 +31,14 @@ from ultrafast.utils import get_featurizer, xavier_normal
 class PCBAEvaluationCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         eval_pcba(trainer, pl_module)
+
+class VSDSEvaluationCallback(Callback):
+    def __init__(self, vsds_dir):
+        super().__init__()
+        self.vsds_dir = vsds_dir
+
+    def on_validation_epoch_end(self, trainer, pl_module):
+        eval_vsds(trainer, pl_module, vsds_dir=self.vsds_dir)
 
 def train_cli():
     parser = argparse.ArgumentParser(description="PLM_DTI Training.")
@@ -73,6 +81,8 @@ def train_cli():
     parser.add_argument("--model-size", default="small", choices=["small", "large"], help="Choose the size of the model")
     parser.add_argument("--ship-model", help="Train a final to ship model, while excluding the uniprot id's specified by this argument.", dest="ship_model")
     parser.add_argument("--eval-pcba", action="store_true", help="Evaluate PCBA during validation")
+    parser.add_argument("--eval-vsds", action="store_true", help="Evaluate VSDS during validation")
+    parser.add_argument("--vsds-dir", type=str, default="data/vsds_massivedecoy", help="VSDS dataset directory")
     parser.add_argument("--sigmoid-scalar", type=int, default=5, dest="sigmoid_scalar")
 
     args = parser.parse_args()
@@ -107,6 +117,8 @@ def train(
     model_size: str,
     ship_model: str,
     eval_pcba: bool,
+    eval_vsds: bool,
+    vsds_dir: str,
     sigmoid_scalar: int,
 ):
     args = argparse.Namespace(
@@ -138,6 +150,8 @@ def train(
         model_size=model_size,
         ship_model=ship_model,
         eval_pcba=eval_pcba,
+        eval_vsds=eval_vsds,
+        vsds_dir=vsds_dir,
         sigmoid_scalar=sigmoid_scalar,
     )
     config = OmegaConf.load(args.config)
@@ -342,10 +356,8 @@ def train(
     callbacks = [checkpoint_callback]
     if args.eval_pcba:
         callbacks.append(PCBAEvaluationCallback())
-
-    callbacks = [checkpoint_callback]
-    if args.eval_pcba:
-        callbacks.append(PCBAEvaluationCallback())
+    if args.eval_vsds:
+        callbacks.append(VSDSEvaluationCallback(args.vsds_dir))
 
     # Train model
     trainer = pl.Trainer(

@@ -229,10 +229,9 @@ class EmbedInMemoryDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, i):
-        s = self.featurizer.prepare_string(self.data[i])
-        item = self.featurizer.features[s]
-
-        return item
+        seq = self.featurizer.prepare_string(self.data[i])
+        # Use the featurizer interface to support LMDB-backed embeddings
+        return self.featurizer(seq)
 
 class EmbeddedDataset(Dataset):
     def __init__(self,
