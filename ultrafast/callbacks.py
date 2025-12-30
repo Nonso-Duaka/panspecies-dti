@@ -56,6 +56,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
             model.args.drug_featurizer,
             save_dir=out_dir,
             batch_size=2048 * 8,
+            ext="lmdb",
         )
         drug_featurizer = drug_featurizer.to(device)
 
@@ -81,6 +82,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba'):
             model.args.target_featurizer,
             save_dir=out_dir,
             batch_size=16,
+            ext="lmdb",
         )
         target_featurizer = target_featurizer.to(device)
 
