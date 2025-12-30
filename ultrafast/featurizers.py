@@ -63,7 +63,6 @@ class Featurizer:
 
         self.id_to_idx = None
         self.ext = ext
-        self.db = None
         self._map_size = 10000
         if ext == 'lmdb' and 'map_size' in kwargs and kwargs['map_size'] is not None:
             self._map_size = kwargs['map_size']
