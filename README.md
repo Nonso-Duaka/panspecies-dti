@@ -59,13 +59,13 @@ ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --task 
 --target-protein-id {TARGET} --similarity-threshold {THRESHOLD} --eval-pcba
 # SPRINT
 ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --epochs 15 --ship-model --model-size large
---target-protein-id "all"/ none --similarity-threshold 0.9 
+--target-protein-id "all" --similarity-threshold 0.9 
 # SPRINT-Average
 ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --prot-proj avg --epochs 15 --ship-model --model-size large
---target-protein-id "all"/ none --similarity-threshold 0.9 
+--target-protein-id "all" --similarity-threshold 0.9 
 # SPRINT-ProtBert
 ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --target-featurizer ProtBertFeaturizer --epochs 15 --ship-model --model-size large
---target-protein-id "all"/ none --similarity-threshold 0.9
+--target-protein-id "all" --similarity-threshold 0.9
 ```
 Adding ``--eval-pcba`` can show the performance on the Lit-PCBA dataset after epoch of training. 
 

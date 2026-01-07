@@ -25,7 +25,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id=None):
         trainer: PyTorch Lightning trainer
         model: Model to evaluate
         pcba_dir: Directory containing Lit-PCBA dataset
-        target_protein_id: Optional protein ID to evaluate. If None or "all", evaluate all proteins.
+        target_protein_id: Optional protein ID to evaluate. If "all", evaluate all proteins.
     """
 
     all_targets = []
@@ -34,7 +34,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id=None):
     all_efs = {0.005: [], 0.01: [], 0.05: []}
 
     # Decide which target folders to evaluate
-    if target_protein_id is None or str(target_protein_id).lower() == "all":
+    if str(target_protein_id).lower() == "all":
         target_folders = [f for f in glob.glob(f'{pcba_dir}/*') if os.path.isdir(f)]
     else:
         target_folder = os.path.join(pcba_dir, target_protein_id)

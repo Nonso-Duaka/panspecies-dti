@@ -3,6 +3,10 @@ from __future__ import annotations
 import torch
 import os
 import hashlib
+import subprocess
+import tempfile
+import uuid
+import json
 
 import numpy as np
 import pandas as pd
@@ -59,38 +63,31 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
         target_sequence: Single target protein sequence string or list of sequences
         train_sequences: Dictionary mapping UniProt IDs to sequences
         threshold: Similarity threshold (0.0-1.0) for filtering
-        tmp_dir: Temporary directory for MMSeqs2 files
+        tmp_dir: Temporary directory for MMSeqs2 files 
 
     Returns:
         Set of UniProt IDs that have similarity >= threshold to any target sequence
     """
-    import subprocess
-    import tempfile
-    import uuid
 
-    # Create a unique subdirectory to avoid conflicts between concurrent runs
-    unique_tmp_dir = os.path.join(tmp_dir, f"run_{uuid.uuid4().hex[:16]}")
-    os.makedirs(unique_tmp_dir, exist_ok=True)
+    with tempfile.TemporaryDirectory() as unique_tmp_dir:
+        # Create temporary FASTA files
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as target_fasta:
+            # Handle single sequence or list of sequences
+            if isinstance(target_sequence, list):
+                for idx, seq in enumerate(target_sequence):
+                    target_fasta.write(f">target_{idx}\n{seq}\n")
+            else:
+                target_fasta.write(f">target\n{target_sequence}\n")
+            target_fasta_path = target_fasta.name
 
-    # Create temporary FASTA files
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as target_fasta:
-        # Handle single sequence or list of sequences
-        if isinstance(target_sequence, list):
-            for idx, seq in enumerate(target_sequence):
-                target_fasta.write(f">target_{idx}\n{seq}\n")
-        else:
-            target_fasta.write(f">target\n{target_sequence}\n")
-        target_fasta_path = target_fasta.name
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as train_fasta:
+            for seq_id, seq in train_sequences.items():
+                train_fasta.write(f">{seq_id}\n{seq}\n")
+            train_fasta_path = train_fasta.name
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as train_fasta:
-        for seq_id, seq in train_sequences.items():
-            train_fasta.write(f">{seq_id}\n{seq}\n")
-        train_fasta_path = train_fasta.name
+        # Create output file path
+        output_file = os.path.join(unique_tmp_dir, 'similar_sequences.tsv')
 
-    # Create output file path
-    output_file = os.path.join(unique_tmp_dir, 'similar_sequences.tsv')
-
-    try:
         # Run MMSeqs2 with unique temp directory and explicit threading
         commands = [
             f"mmseqs createdb {train_fasta_path} {unique_tmp_dir}/queryDB",
@@ -116,10 +113,6 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
                     similar_ids.add(query_id)
 
         return similar_ids
-
-    finally:
-        # Clean up the entire unique temporary directory
-        subprocess.run(f"rm -rf {unique_tmp_dir} 2>/dev/null || true", shell=True)
 
 def embed_collate_fn(args: T.Tuple[torch.Tensor, torch.Tensor], moltype="target"):
     """
@@ -1220,17 +1213,17 @@ class MergedDataset(Dataset):
             pos_data_train = pd.read_csv('data/MERGED/huge_data/merged_pos_uniq_train_rand.tsv', sep='\t')
             pos_data_val = pd.read_csv('data/MERGED/huge_data/merged_pos_uniq_val_rand.tsv', sep='\t')
             pos_data_test = pd.read_csv('data/MERGED/huge_data/merged_pos_uniq_test_rand.tsv', sep='\t')
-            self.pos_data = pd.concat([pos_data_train, pos_data_val, pos_data_test], ignore_index=True)
+            self.pos_data = pd.concat([pos_data_train, pos_data_val, pos_data_test])
 
             neg_data_train = pd.read_csv('data/MERGED/huge_data/merged_neg_uniq_train_rand.tsv', sep='\t')
             neg_data_val = pd.read_csv('data/MERGED/huge_data/merged_neg_uniq_val_rand.tsv', sep='\t')
             neg_data_test = pd.read_csv('data/MERGED/huge_data/merged_neg_uniq_test_rand.tsv', sep='\t')
-            self.neg_data = pd.concat([neg_data_train, neg_data_val, neg_data_test], ignore_index=True)
+            self.neg_data = pd.concat([neg_data_train, neg_data_val, neg_data_test])
         else:
             self.pos_data = pd.read_csv(f'data/MERGED/huge_data/merged_pos_uniq_{split}_rand.tsv', sep='\t')
             self.neg_data = pd.read_csv(f'data/MERGED/huge_data/merged_neg_uniq_{split}_rand.tsv', sep='\t')
 
-        # CRITICAL FIX: Filter out excluded proteins from the dataset
+        # Filter out excluded proteins from the dataset
         if self.split == 'all' and len(self.exclusion) > 0:
             bp, bn = len(self.pos_data), len(self.neg_data)
             self.pos_data = self.pos_data[~self.pos_data['aa_seq'].isin(self.exclusion)].reset_index(drop=True)
@@ -1378,7 +1371,6 @@ class MergedDataModule(pl.LightningDataModule):
         tdim = self.target_featurizer.shape
 
         if self.ship_model: # Combine all data for final model, while excluding similar proteins
-            import json
 
             # Load LIT-PCBA sequences
             if self.target_featurizer.name == "SaProt":
@@ -1426,7 +1418,7 @@ class MergedDataModule(pl.LightningDataModule):
             self.data_all = MergedDataset('all', self.drug_db, self.target_db, self.id_to_smiles, self.id_to_target, tdim=tdim, exclusion_ids=exclusion_ids)
             self.data_test = MergedDataset('test', self.drug_db, self.target_db, self.id_to_smiles, self.id_to_target, tdim=tdim, exclusion_ids=exclusion_ids)
         else:
-            # Regular setup for train/val/test (no exclusions)
+            # Regular setup for train/val/test 
             if stage == "fit" or stage is None:
                 self.data_train = MergedDataset('train', self.drug_db, self.target_db, self.id_to_smiles, self.id_to_target, tdim=tdim)
                 self.data_val = MergedDataset('val', self.drug_db, self.target_db, self.id_to_smiles, self.id_to_target, tdim=tdim)
