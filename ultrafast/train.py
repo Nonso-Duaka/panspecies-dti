@@ -77,7 +77,7 @@ def train_cli():
     parser.add_argument("--model-size", default="small", choices=["small", "large"], help="Choose the size of the model")
     parser.add_argument("--ship-model", action="store_true", help="Train a final to ship model, while excluding similar proteins based on sequence similarity.", dest="ship_model")
     parser.add_argument("--similarity-threshold", type=float, default=0.9, help="Sequence similarity threshold for filtering (0.0-1.0)", dest="similarity_threshold")
-    parser.add_argument("--target-protein-id", type=str, default=None, help="Target protein ID to evaluate/filter ('all' for all proteins, or specific protein name)", dest="target_protein_id")
+    parser.add_argument("--target-protein-id", type=str, default="all", help="Target protein ID to evaluate/filter ('all' for all proteins, or specific protein name)", dest="target_protein_id")
     parser.add_argument("--eval-pcba", action="store_true", help="Evaluate PCBA during validation")
     parser.add_argument("--sigmoid-scalar", type=int, default=5, dest="sigmoid_scalar")
 

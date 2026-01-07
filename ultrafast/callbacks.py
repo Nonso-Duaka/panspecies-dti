@@ -15,7 +15,7 @@ from torch.utils.data import Dataset, DataLoader
 from ultrafast.datamodules import EmbedInMemoryDataset, embed_collate_fn
 from ultrafast.utils import get_featurizer, CalcAUC, CalcBEDROC, CalcEnrichment
 
-def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id=None):
+def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all"):
     """
     Evaluate the model checkpoint against the lit-pcba dataset.
     # If structure aware ckpt, use the correct token file. detect this automatically

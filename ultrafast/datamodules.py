@@ -55,7 +55,7 @@ def get_task_dir(task_name: str):
 
     return Path(task_paths[task_name.lower()]).resolve()
 
-def compute_similar_sequences_single_target(target_sequence, train_sequences, threshold=0.9, tmp_dir='tmp_mmseqs', threads=64):
+def compute_similar_sequences_single_target(target_sequence, train_sequences, threshold=0.9, threads=64):
     """
     Compute sequence similarity for target protein(s) against training sequences using MMSeqs2.
 
@@ -63,30 +63,33 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
         target_sequence: Single target protein sequence string or list of sequences
         train_sequences: Dictionary mapping UniProt IDs to sequences
         threshold: Similarity threshold (0.0-1.0) for filtering
-        tmp_dir: Temporary directory for MMSeqs2 files 
+        threads: Number of threads for MMSeqs2
 
     Returns:
         Set of UniProt IDs that have similarity >= threshold to any target sequence
     """
 
     with tempfile.TemporaryDirectory() as unique_tmp_dir:
-        # Create temporary FASTA files
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as target_fasta:
-            # Handle single sequence or list of sequences
-            if isinstance(target_sequence, list):
-                for idx, seq in enumerate(target_sequence):
-                    target_fasta.write(f">target_{idx}\n{seq}\n")
-            else:
-                target_fasta.write(f">target\n{target_sequence}\n")
-            target_fasta_path = target_fasta.name
+        # Create FASTA files within the temporary directory
+        target_fasta_path = os.path.join(unique_tmp_dir, 'target.fasta')
+        target_fasta = open(target_fasta_path, 'w')
+        # Handle single sequence or list of sequences
+        if isinstance(target_sequence, list):
+            for idx, seq in enumerate(target_sequence):
+                target_fasta.write(f">target_{idx}\n{seq}\n")
+        else:
+            target_fasta.write(f">target\n{target_sequence}\n")
+        target_fasta.close()
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False, dir=unique_tmp_dir) as train_fasta:
-            for seq_id, seq in train_sequences.items():
-                train_fasta.write(f">{seq_id}\n{seq}\n")
-            train_fasta_path = train_fasta.name
+        train_fasta_path = os.path.join(unique_tmp_dir, 'train.fasta')
+        train_fasta = open(train_fasta_path, 'w')
+        for seq_id, seq in train_sequences.items():
+            train_fasta.write(f">{seq_id}\n{seq}\n")
+        train_fasta.close()
 
         # Create output file path
         output_file = os.path.join(unique_tmp_dir, 'similar_sequences.tsv')
+
 
         # Run MMSeqs2 with unique temp directory and explicit threading
         commands = [
@@ -107,10 +110,11 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
         # Process results
         similar_ids = set()
         if os.path.exists(output_file):
-            with open(output_file, 'r') as f:
-                for line in f:
-                    query_id = line.split('\t')[0]
-                    similar_ids.add(query_id)
+            f = open(output_file, 'r')
+            for line in f:
+                query_id = line.split('\t')[0]
+                similar_ids.add(query_id)
+            f.close()
 
         return similar_ids
 
