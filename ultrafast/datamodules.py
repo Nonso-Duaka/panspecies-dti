@@ -95,7 +95,7 @@ def compute_similar_sequences_single_target(target_sequence, train_sequences, th
         commands = [
             f"mmseqs createdb {train_fasta_path} {unique_tmp_dir}/queryDB",
             f"mmseqs createdb {target_fasta_path} {unique_tmp_dir}/targetDB",
-            f"mmseqs search {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {unique_tmp_dir}/tmp -s 7.5 --min-seq-id {threshold} --max-seqs 0 --threads {threads}",
+            f"mmseqs search {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {unique_tmp_dir}/tmp -s 7.5 --min-seq-id {threshold} --max-seqs 100000 --threads {threads}",
             f"mmseqs convertalis {unique_tmp_dir}/queryDB {unique_tmp_dir}/targetDB {unique_tmp_dir}/resultDB {output_file}"
         ]
 
