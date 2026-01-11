@@ -136,15 +136,23 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
         all_bedrocs.append(bedroc)
         all_aurocs.append(auroc)
 
-        # Log individual target metrics using direct logger
-        if trainer.logger and hasattr(trainer.logger, "experiment"):
-            trainer.logger.experiment.log({
-                f"pcba/{target}/AUROC": auroc,
-                f"pcba/{target}/BEDROC_85": bedroc,
-                f"pcba/{target}/EF_0.005": efs[0],
-                f"pcba/{target}/EF_0.01": efs[1],
-                f"pcba/{target}/EF_0.05": efs[2],
-            }, step=trainer.global_step)
+        # Log individual target metrics using PyTorch Lightning's log method
+        model.log(f"pcba/{target}/AUROC", auroc, on_epoch=True, logger=True)
+        model.log(f"pcba/{target}/BEDROC_85", bedroc, on_epoch=True, logger=True)
+        model.log(f"pcba/{target}/EF_0.005", efs[0], on_epoch=True, logger=True)
+        model.log(f"pcba/{target}/EF_0.01", efs[1], on_epoch=True, logger=True)
+        model.log(f"pcba/{target}/EF_0.05", efs[2], on_epoch=True, logger=True)
+
+        current_epoch = trainer.current_epoch
+        print(f"\n{'='*60}")
+        print(f"[PCBA Eval - Epoch {current_epoch}] Target: {target}")
+        print(f"{'='*60}")
+        print(f"  AUROC:     {auroc:.4f}")
+        print(f"  BEDROC_85: {bedroc:.4f}")
+        print(f"  EF_0.005:  {efs[0]:.4f}")
+        print(f"  EF_0.01:   {efs[1]:.4f}")
+        print(f"  EF_0.05:   {efs[2]:.4f}")
+        print(f"{'='*60}\n")
 
     avg_auroc = np.mean(all_aurocs)
     avg_bedroc = np.mean(all_bedrocs)
@@ -152,11 +160,18 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
 
     # Log average metrics for multiple targets only
     if len(target_folders) > 1 and hasattr(model, "log"):
+        current_epoch = trainer.current_epoch
+
         model.log("pcba/avg_AUROC", avg_auroc, on_epoch=True, prog_bar=True, logger=True)
         model.log("pcba/avg_BEDROC_85", avg_bedroc, on_epoch=True, prog_bar=False, logger=True)
         for k, v in sorted(avg_efs.items()):
             model.log(f"pcba/avg_EF_{k}", v, on_epoch=True, prog_bar=False, logger=True)
 
-        print(f"Average EF: {avg_efs}")
-        print(f"Average BEDROC_85: {avg_bedroc:.3f}")
-        print(f"Average AUROC: {avg_auroc:.3f}")
+        print(f"\n{'='*60}")
+        print(f"[PCBA Eval - Epoch {current_epoch}] AVERAGE ACROSS {len(target_folders)} TARGETS")
+        print(f"{'='*60}")
+        print(f"  Average AUROC:     {avg_auroc:.4f}")
+        print(f"  Average BEDROC_85: {avg_bedroc:.4f}")
+        for k, v in sorted(avg_efs.items()):
+            print(f"  Average EF_{k}:    {v:.4f}")
+        print(f"{'='*60}\n")
