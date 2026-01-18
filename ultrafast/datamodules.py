@@ -1376,13 +1376,14 @@ class MergedDataModule(pl.LightningDataModule):
 
         if self.ship_model: # Combine all data for final model, while excluding similar proteins
 
-            # Load LIT-PCBA sequences
-            if self.target_featurizer.name == "SaProt":
-                pcba_seq_file = 'data/lit_pcba/saprot_sequence_dict.json'
-            else:
-                pcba_seq_file = 'data/lit_pcba/lit_pcba_sequence_dict.json'
-
+            # Load LIT-PCBA sequences (always use regular amino acid sequences for MMSeqs2)
+            pcba_seq_file = 'data/lit_pcba/lit_pcba_sequence_dict.json'
             pcba_sequences = json.load(open(pcba_seq_file))
+
+            # Load regular amino acid sequences for MMSeqs2 comparison
+            train_seqs_for_mmseqs = np.load('data/MERGED/huge_data/id_to_sequence.npy', allow_pickle=True).item()
+            train_seqs_for_mmseqs = {k: v for k, v in train_seqs_for_mmseqs.items()
+                                     if not any(char.isdigit() for char in v)}
 
             # Determine which target sequences to use
             if self.target_protein_id is None or self.target_protein_id.lower() == 'all':
@@ -1406,10 +1407,10 @@ class MergedDataModule(pl.LightningDataModule):
                     target_seqs = [target_seqs]
 
             # Compute similar sequences on-the-fly
-            print(f"Computing sequence similarity against {len(target_seqs)} target sequence(s) from {len(self.id_to_target)} training sequences...")
+            print(f"Computing sequence similarity against {len(target_seqs)} target sequence(s) from {len(train_seqs_for_mmseqs)} training sequences...")
             similar_ids = compute_similar_sequences_single_target(
                 target_seqs,
-                self.id_to_target,
+                train_seqs_for_mmseqs,
                 threshold=self.similarity_threshold
             )
 
