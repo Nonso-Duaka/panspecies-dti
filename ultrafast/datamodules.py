@@ -1376,17 +1376,17 @@ class MergedDataModule(pl.LightningDataModule):
 
         if self.ship_model: # Combine all data for final model, while excluding similar proteins
 
-            # Load LIT-PCBA sequences (always use regular amino acid sequences for MMSeqs2)
+            # Load LIT-PCBA sequences
             pcba_seq_file = 'data/lit_pcba/lit_pcba_sequence_dict.json'
             pcba_sequences = json.load(open(pcba_seq_file))
 
-            # Load regular amino acid sequences for MMSeqs2 comparison
+            # Load regular amino acid sequences for MMSeqs2 
             train_seqs_for_mmseqs = np.load('data/MERGED/huge_data/id_to_sequence.npy', allow_pickle=True).item()
             train_seqs_for_mmseqs = {k: v for k, v in train_seqs_for_mmseqs.items()
                                      if not any(char.isdigit() for char in v)}
 
             # Determine which target sequences to use
-            if self.target_protein_id is None or self.target_protein_id.lower() == 'all':
+            if self.target_protein_id.lower() == 'all':
                 # Combine all LIT-PCBA sequences
                 print(f"Computing sequence similarity for ALL LIT-PCBA proteins at threshold {self.similarity_threshold}")
                 all_target_seqs = []
