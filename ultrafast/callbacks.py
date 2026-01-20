@@ -160,9 +160,6 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
     avg_bedroc = np.mean(all_bedrocs)
     avg_efs = {k: np.mean(v) for k, v in all_efs.items()}
 
-def eval_vsds(trainer, model, vsds_dir):
-    return eval_pcba(trainer, model, pcba_dir=vsds_dir)
-
     # Log average metrics for multiple targets only
     if len(target_folders) > 1 and hasattr(model, "log"):
         current_epoch = trainer.current_epoch
@@ -180,3 +177,6 @@ def eval_vsds(trainer, model, vsds_dir):
         for k, v in sorted(avg_efs.items()):
             print(f"  Average EF_{k}:    {v:.4f}")
         print(f"{'='*60}\n")
+
+def eval_vsds(trainer, model, vsds_dir):
+    return eval_pcba(trainer, model, pcba_dir=vsds_dir)
