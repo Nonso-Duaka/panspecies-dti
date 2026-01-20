@@ -70,6 +70,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
             model.args.drug_featurizer,
             save_dir=out_dir,
             batch_size=2048 * 8,
+            ext="lmdb",
         )
         drug_featurizer = drug_featurizer.to(device)
 
@@ -95,6 +96,7 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
             model.args.target_featurizer,
             save_dir=out_dir,
             batch_size=16,
+            ext="lmdb",
         )
         target_featurizer = target_featurizer.to(device)
 
@@ -175,3 +177,6 @@ def eval_pcba(trainer, model, pcba_dir='data/lit_pcba', target_protein_id="all")
         for k, v in sorted(avg_efs.items()):
             print(f"  Average EF_{k}:    {v:.4f}")
         print(f"{'='*60}\n")
+
+def eval_vsds(trainer, model, vsds_dir):
+    return eval_pcba(trainer, model, pcba_dir=vsds_dir)

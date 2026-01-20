@@ -68,7 +68,7 @@ class Featurizer:
             self._map_size = kwargs['map_size']
 
     def __call__(self, seq: str) -> torch.Tensor:
-        if self.ext == '.lmdb' and self.db is not None:
+        if self.ext == 'lmdb' and self.db is not None:
             assert self.id_to_idx is not None, "LMDB database must be preloaded to use this function"
             hashed_seq = hashlib.md5(seq.encode()).hexdigest()
             item = self.db[self.id_to_idx[hashed_seq]]
@@ -307,7 +307,7 @@ class Featurizer:
         db = px.Writer(dirpath=str(self.path), map_size_limit=self._map_size, ram_gb_limit=10)
 
         batch_size = 2048 * 8 if self.moltype == "drug" else 16
-        for i in tqdm(range(0, len(seq_list), batch_size)):
+        for i in tqdm(range(0, len(sorted_ids), batch_size)):
             batch_ids = np.array(sorted_ids[i:i+batch_size])
             batch_seq = [seq_dict[idx] for idx in batch_ids]
 

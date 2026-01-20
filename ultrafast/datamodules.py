@@ -296,10 +296,9 @@ class EmbedInMemoryDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, i):
-        s = self.featurizer.prepare_string(self.data[i])
-        item = self.featurizer.features[s]
-
-        return item
+        seq = self.featurizer.prepare_string(self.data[i])
+        # Use the featurizer interface to support LMDB-backed embeddings
+        return self.featurizer(seq)
 
 class EmbeddedDataset(Dataset):
     def __init__(self,
@@ -411,10 +410,10 @@ class DTIDataModule(pl.LightningDataModule):
         self.drug_featurizer = drug_featurizer
         self.target_featurizer = target_featurizer
 
-        self.drug_featurizer.ext = ".lmdb"
-        self.target_featurizer.ext = ".lmdb"
-        self.drug_featurizer._save_path = self.drug_featurizer.path.with_suffix(self.drug_featurizer.ext)
-        self.target_featurizer._save_path = self.target_featurizer.path.with_suffix(self.target_featurizer.ext)
+        self.drug_featurizer.ext = "lmdb"
+        self.target_featurizer.ext = "lmdb"
+        self.drug_featurizer._save_path = self.drug_featurizer.path.with_suffix(f".{self.drug_featurizer.ext}")
+        self.target_featurizer._save_path = self.target_featurizer.path.with_suffix(f".{self.target_featurizer.ext}")
         if self.target_featurizer.name == "SaProt":
             self._train_path = Path("train_foldseek.csv")
             self._val_path = Path("val_foldseek.csv")
@@ -564,10 +563,10 @@ class TDCDataModule(pl.LightningDataModule):
             self._target_column = "Target Structure"
             self.target_struc_dict = None
 
-        self.drug_featurizer.ext = ".lmdb"
-        self.target_featurizer.ext = ".lmdb"
-        self.drug_featurizer._save_path = self.drug_featurizer.path.with_suffix(self.drug_featurizer.ext)
-        self.target_featurizer._save_path = self.target_featurizer.path.with_suffix(self.target_featurizer.ext)
+        self.drug_featurizer.ext = "lmdb"
+        self.target_featurizer.ext = "lmdb"
+        self.drug_featurizer._save_path = self.drug_featurizer.path.with_suffix(f".{self.drug_featurizer.ext}")
+        self.target_featurizer._save_path = self.target_featurizer.path.with_suffix(f".{self.target_featurizer.ext}")
 
         self.dg_group = dti_dg_group(path=self._data_dir)
         self.dg_benchmark = self.dg_group.get("bindingdb_patent")

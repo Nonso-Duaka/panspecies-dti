@@ -71,6 +71,13 @@ Adding ``--eval-pcba`` can show the performance on the Lit-PCBA dataset after ep
 
 Targets ids can be found here: ``targets.txt``.
 
+### VSDS
+```
+# MassiveDecoy
+ultrafast-train --exp-id VSDS_MassiveDecoy --config configs/saprot_agg_config.yaml --task merged --model-size large --vsds-dir data/VSDS_vd/vsds_massivedecoy --epochs 15 --wandb-proj "sprint-vsds-vd"
+```
+Similarly, to evaluate TrueDecoy and RandomDecoy use ``--vsds-dir data/VSDS_vd/vsds_truedecoy`` and ``--vsds-dir data/VSDS_vd/vsds_randomdecoy``. Adding ``--eval-vsds`` can show the performance on the VSDS dataset after epoch of training.
+
 ### TDC Leaderboard
 ```
 # SPRINT
