@@ -62,17 +62,32 @@ ultrafast-train --exp-id DAVIS --config configs/saprot_agg_config.yaml --model-s
 Other DTI dataset models can be reproduced by adding `--task` to the commandline with: `biosnap`, `bindingdb`, `biosnap_prot`(Unseen Targets), `biosnap_mol`(Unseen Drugs), or `merged`
 
 ### Lit-PCBA
-
-```sh
-# SPRINT
-ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --epochs 15 --ship-model data/MERGED/huge_data/uniprots_excluded_at_90.txt
-# SPRINT-Average
-ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --prot-proj avg --epochs 15 --ship-model data/MERGED/huge_data/uniprots_excluded_at_90.txt 
-# SPRINT-ProtBert
-ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --target-featurizer ProtBertFeaturizer --epochs 15 --ship-model data/MERGED/huge_data/uniprots_excluded_at_90.txt 
 ```
+# Setup MMseq2
+conda install -c conda-forge -c bioconda mmseqs2
+# Running Single Lit-PCBA
+ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --task merged --epochs 15 --ship-model --model-size large
+--target-protein-id {TARGET} --similarity-threshold {THRESHOLD} --eval-pcba
+# SPRINT
+ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --epochs 15 --ship-model --model-size large
+--target-protein-id "all" --similarity-threshold 0.9 
+# SPRINT-Average
+ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --prot-proj avg --epochs 15 --ship-model --model-size large
+--target-protein-id "all" --similarity-threshold 0.9 
+# SPRINT-ProtBert
+ultrafast-train --exp-id LitPCBA --config configs/saprot_agg_config.yaml --target-featurizer ProtBertFeaturizer --epochs 15 --ship-model --model-size large
+--target-protein-id "all" --similarity-threshold 0.9
+```
+Adding ``--eval-pcba`` can show the performance on the Lit-PCBA dataset after epoch of training. 
 
-Adding `--eval-pcba` can show the performance on the Lit-PCBA dataset after epoch of training.
+Targets ids can be found here: ``targets.txt``.
+
+### VSDS
+```
+# MassiveDecoy
+ultrafast-train --exp-id VSDS_MassiveDecoy --config configs/saprot_agg_config.yaml --task merged --model-size large --vsds-dir data/VSDS_vd/vsds_massivedecoy --epochs 15 --wandb-proj "sprint-vsds-vd"
+```
+Similarly, to evaluate TrueDecoy and RandomDecoy use ``--vsds-dir data/VSDS_vd/vsds_truedecoy`` and ``--vsds-dir data/VSDS_vd/vsds_randomdecoy``. Adding ``--eval-vsds`` can show the performance on the VSDS dataset after epoch of training.
 
 ### TDC Leaderboard
 
