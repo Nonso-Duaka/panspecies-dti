@@ -117,6 +117,18 @@ ultrafast-predict \
   --output-dir results/
 ```
 
+# Query drugs against multi-species proteomes
+
+```sh
+ultrafast-query \
+  --smi drugs.smi \
+  --checkpoint checkpoints/saprot.ckpt \
+  --db-dir ./proteome_dbs \
+  --db-name conplex_v0 \
+  --topk 10 \
+  --output-dir results/
+```
+
 # Embed proteins and molecules
 
 Embed a library of proteins/molecules, using `--data-file`: a CSV/TSV file (separator inferred). The `--data-file` to embed must contain a "SMILES" or "Target Sequence" column for drug or target embedding, respectively.
